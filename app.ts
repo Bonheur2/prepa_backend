@@ -1,4 +1,5 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
 import authRoutes from './Routes/authRoutes';
 import aiRoutes from './Routes/aiRoutes';
 import syncRoutes from './Routes/syncRoutes';
@@ -12,6 +13,26 @@ import classesRoutes from './Routes/classesRoutes';
 import knowledgeRoutes from './Routes/knowledgeRoutes';
 
 const app: Express = express();
+
+// CORS_ORIGIN is a comma-separated allowlist (e.g. the admin dashboard's
+// deployed URL). Bearer-token auth means no cookies are involved, so
+// `credentials` is left at its default (false) -- the client just sends
+// the Authorization header itself.
+//
+// With no CORS_ORIGIN set: wide open outside production, so a local web
+// dashboard on any port just works during development. Production requires
+// an explicit allowlist -- silently allowing all origins there would defeat
+// the point of CORS.
+const corsOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: corsOrigins.length > 0 ? corsOrigins : process.env.NODE_ENV !== 'production',
+  })
+);
 
 app.use(express.json({ limit: '5mb' }));
 
