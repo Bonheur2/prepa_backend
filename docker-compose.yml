@@ -1,39 +1,13 @@
 version: '3.8'
 
 services:
-  db:
-    image: pgvector/pgvector:pg16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: prepa_user
-      POSTGRES_PASSWORD: prepa_password
-      POSTGRES_DB: prepa
-    ports:
-      - '5432:5432'
-    volumes:
-      - prepa_pgdata:/var/lib/postgresql/data
-      # Postgres runs every .sql file here, in filename order, on first
-      # container start -- that's why the schema/migration files are
-      # numbered (00_, 01_, ...).
-      - ./db:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U prepa_user -d prepa']
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   app:
     build: .
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://prepa_user:prepa_password@db:5432/prepa
-      JWT_SECRET: ${JWT_SECRET:-dev_only_change_me}
-      GROQ_API_KEY: ${GROQ_API_KEY}
+    # Real secrets (DATABASE_URL pointed at Neon, JWT_SECRET, GROQ_API_KEY)
+    # live in .env.local -- gitignored, never committed. Populate it from
+    # .env.example before running `docker compose up`.
+    env_file:
+      - .env.local
     ports:
       - '3000:3000'
-
-volumes:
-  prepa_pgdata:
