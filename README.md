@@ -13,28 +13,29 @@ starts it.
 
 ## Setup
 
+The database is Neon (managed Postgres with the `vector` extension enabled) --
+there is no local Postgres container. Run the three files under `db/` against
+your Neon database once, in order (`00_schema.sql`, then
+`01_classes_auth_pastpapers.sql`, then `02_rag_knowledge_base.sql`), e.g. via
+Neon's SQL editor or `psql "$DATABASE_URL" -f db/00_schema.sql` (repeat per
+file).
+
 ### Option A: Docker (fastest)
 
 ```bash
-cp .env.example .env   # fill in JWT_SECRET and GROQ_API_KEY
+cp .env.example .env.local   # fill in DATABASE_URL (your Neon connection string), JWT_SECRET, GROQ_API_KEY
 docker compose up --build
 ```
 
-This boots Postgres (the `pgvector/pgvector:pg16` image -- needed for the RAG
-feature's `vector` column type), loads `db/00_schema.sql`, then
-`db/01_classes_auth_pastpapers.sql`, then `db/02_rag_knowledge_base.sql`
-automatically (Postgres runs `docker-entrypoint-initdb.d/*.sql` in filename
-order on first start), and runs the app at `http://localhost:3000`.
+Runs the app at `http://localhost:3000`, connecting straight to Neon via
+`DATABASE_URL` in `.env.local` (loaded through `env_file` in
+`docker-compose.yml`).
 
-### Option B: Local Node + local Postgres
+### Option B: Local Node
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in DATABASE_URL, JWT_SECRET, GROQ_API_KEY
-createdb prepa
-psql prepa < db/00_schema.sql
-psql prepa < db/01_classes_auth_pastpapers.sql
-psql prepa < db/02_rag_knowledge_base.sql   # needs the pgvector extension available
+cp .env.example .env.local   # fill in DATABASE_URL (your Neon connection string), JWT_SECRET, GROQ_API_KEY
 npm run dev
 ```
 
