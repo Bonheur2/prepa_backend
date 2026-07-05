@@ -1,0 +1,610 @@
+{
+  "info": {
+    "name": "PREPA Backend",
+    "description": "Full API collection for the PREPA exam-prep backend (Express + Neon Postgres + pgvector RAG + Groq AI tutor). Auth requests auto-save tokens/IDs into collection variables so downstream requests can chain without manual copy-pasting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{teacherToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "rootUrl", "value": "https://prepa-backend-3d1w.onrender.com" },
+    { "key": "baseUrl", "value": "{{rootUrl}}/api/v1" },
+    { "key": "teacherToken", "value": "" },
+    { "key": "studentToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "studentId", "value": "" },
+    { "key": "subjectId", "value": "" },
+    { "key": "topicId", "value": "" },
+    { "key": "questionId", "value": "" },
+    { "key": "pastPaperId", "value": "" },
+    { "key": "quizId", "value": "" },
+    { "key": "classId", "value": "" },
+    { "key": "joinCode", "value": "" },
+    { "key": "documentId", "value": "" },
+    { "key": "resetToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{rootUrl}}/health",
+            "auth": { "type": "noauth" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Teacher",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('teacherToken', body.token);",
+                  "  console.log('teacherToken saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "url": "{{baseUrl}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Teacher One\",\n  \"email\": \"teacher1@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"TEACHER\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('studentToken', body.token);",
+                  "  pm.collectionVariables.set('studentId', body.user.id);",
+                  "  console.log('studentToken/studentId saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "url": "{{baseUrl}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Student One\",\n  \"email\": \"student1@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"STUDENT\",\n  \"level\": \"O_LEVEL\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('adminToken', body.token);",
+                  "  console.log('adminToken saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "url": "{{baseUrl}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin One\",\n  \"email\": \"admin1@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"ADMIN\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.user.role === 'TEACHER') pm.collectionVariables.set('teacherToken', body.token);",
+                  "  if (body.user.role === 'STUDENT') { pm.collectionVariables.set('studentToken', body.token); pm.collectionVariables.set('studentId', body.user.id); }",
+                  "  if (body.user.role === 'ADMIN') pm.collectionVariables.set('adminToken', body.token);",
+                  "  console.log('token saved for role', body.user.role);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "url": "{{baseUrl}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teacher1@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Request Password Reset",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "url": "{{baseUrl}}/auth/request-password-reset",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teacher1@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "url": "{{baseUrl}}/auth/reset-password",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"new_password\": \"newPassword123\"\n}"
+            },
+            "description": "The reset token isn't emailed anywhere yet (see README) -- it's only console.log'd server-side. Grab it from your server logs after calling Request Password Reset, then set the {{resetToken}} collection variable manually."
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Tutor",
+      "item": [
+        {
+          "name": "Ask Tutor",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": "{{baseUrl}}/ai/tutor",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is photosynthesis?\",\n  \"topic_id\": \"{{topicId}}\",\n  \"history\": []\n}"
+            },
+            "description": "Rate-limited to 20 requests/hour per student. topic_id is optional -- omit it for general revision questions."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sync",
+      "item": [
+        {
+          "name": "Pull (delta sync)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": {
+              "raw": "{{baseUrl}}/sync/pull?last_sync=2024-01-01T00:00:00.000Z",
+              "host": ["{{baseUrl}}"],
+              "path": ["sync", "pull"],
+              "query": [{ "key": "last_sync", "value": "2024-01-01T00:00:00.000Z" }]
+            }
+          }
+        },
+        {
+          "name": "Push (offline quiz attempts)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": "{{baseUrl}}/sync/push",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attempts\": [\n    {\n      \"id\": \"{{$guid}}\",\n      \"question_id\": \"{{questionId}}\",\n      \"quiz_id\": null,\n      \"student_answer\": \"A\",\n      \"is_correct\": true,\n      \"time_spent_seconds\": 30,\n      \"attempted_at\": \"2024-01-01T00:00:00.000Z\"\n    }\n  ]\n}"
+            },
+            "description": "id must be a client-generated UUID -- resending the same id updates the attempt instead of duplicating it (safe to retry after a dropped connection)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subjects",
+      "item": [
+        {
+          "name": "List Subjects",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": "{{baseUrl}}/subjects"
+          }
+        },
+        {
+          "name": "Create Subject",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('subjectId', pm.response.json().subject.id);",
+                  "  console.log('subjectId saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/subjects",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Biology\",\n  \"level\": \"O_LEVEL\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topics",
+      "item": [
+        {
+          "name": "List Topics",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": {
+              "raw": "{{baseUrl}}/topics?subject_id={{subjectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["topics"],
+              "query": [{ "key": "subject_id", "value": "{{subjectId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Create Topic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('topicId', pm.response.json().topic.id);",
+                  "  console.log('topicId saved -- this triggers RAG embedding server-side');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/topics",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject_id\": \"{{subjectId}}\",\n  \"title\": \"Photosynthesis\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        {
+          "name": "List Questions",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": {
+              "raw": "{{baseUrl}}/questions?topic_id={{topicId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions"],
+              "query": [{ "key": "topic_id", "value": "{{topicId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Create Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('questionId', pm.response.json().question.id);",
+                  "  console.log('questionId saved -- this also triggers RAG embedding');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/questions",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic_id\": \"{{topicId}}\",\n  \"question_type\": \"MCQ\",\n  \"question_text\": \"What pigment absorbs light for photosynthesis?\",\n  \"options\": [\"A) Chlorophyll\", \"B) Melanin\", \"C) Keratin\", \"D) Hemoglobin\"],\n  \"correct_answer\": \"A) Chlorophyll\",\n  \"explanation\": \"Chlorophyll is the green pigment that absorbs light energy.\",\n  \"difficulty\": \"MEDIUM\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Past Papers",
+      "item": [
+        {
+          "name": "List Past Papers",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": {
+              "raw": "{{baseUrl}}/past-papers?subject_id={{subjectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["past-papers"],
+              "query": [{ "key": "subject_id", "value": "{{subjectId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Create Past Paper",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('pastPaperId', pm.response.json().past_paper.id);",
+                  "  console.log('pastPaperId saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/past-papers",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject_id\": \"{{subjectId}}\",\n  \"year\": 2023,\n  \"term\": \"Term 1\",\n  \"file_url\": \"https://example.com/papers/biology-2023-term1.pdf\"\n}"
+            },
+            "description": "file_url is an externally-hosted link -- there's no file upload endpoint yet (see README's 'Not yet built' section)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quizzes",
+      "item": [
+        {
+          "name": "List Quizzes",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": "{{baseUrl}}/quizzes"
+          }
+        },
+        {
+          "name": "Create Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('quizId', pm.response.json().quiz.id);",
+                  "  console.log('quizId saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/quizzes",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Photosynthesis Quiz\",\n  \"subject_id\": \"{{subjectId}}\",\n  \"topic_id\": \"{{topicId}}\",\n  \"level\": \"O_LEVEL\",\n  \"question_ids\": [\"{{questionId}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Generate Adaptive Quiz",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": "{{baseUrl}}/quizzes/adaptive",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject_id\": \"{{subjectId}}\",\n  \"question_count\": 10\n}"
+            },
+            "description": "Targets the student's weakest topics (from learning_gaps); falls back to any topic in the subject/level if the student has no tracked gaps yet."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Classes",
+      "item": [
+        {
+          "name": "List Classes",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/classes",
+            "description": "Role-scoped: admin sees all, teacher sees own classes, student sees classes they've joined."
+          }
+        },
+        {
+          "name": "Create Class",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('classId', body.class.id);",
+                  "  pm.collectionVariables.set('joinCode', body.class.join_code);",
+                  "  console.log('classId/joinCode saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/classes",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"P4 Biology Class\",\n  \"level\": \"O_LEVEL\",\n  \"subject_id\": \"{{subjectId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Join Class",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": "{{baseUrl}}/classes/join",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"join_code\": \"{{joinCode}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "List Students",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/students?level=O_LEVEL",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "students"],
+              "query": [{ "key": "level", "value": "O_LEVEL" }]
+            }
+          }
+        },
+        {
+          "name": "Get Student Detail",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/dashboard/students/{{studentId}}",
+            "description": "403s unless the student is in one of the requesting teacher's own classes (admins bypass this)."
+          }
+        },
+        {
+          "name": "List Gaps",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/gaps?subject_id={{subjectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "gaps"],
+              "query": [{ "key": "subject_id", "value": "{{subjectId}}" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Knowledge (RAG Documents)",
+      "item": [
+        {
+          "name": "List Documents",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{studentToken}}" }] },
+            "url": {
+              "raw": "{{baseUrl}}/knowledge/documents?topic_id={{topicId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["knowledge", "documents"],
+              "query": [{ "key": "topic_id", "value": "{{topicId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Create Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('documentId', pm.response.json().document.id);",
+                  "  console.log('documentId saved -- indexed into knowledge_chunks for the AI tutor to retrieve');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/knowledge/documents",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Photosynthesis notes\",\n  \"content\": \"Photosynthesis is the process by which plants convert light energy into chemical energy, producing glucose and oxygen from carbon dioxide and water.\",\n  \"subject_id\": \"{{subjectId}}\",\n  \"topic_id\": \"{{topicId}}\"\n}"
+            },
+            "description": "Plain-text study material for the AI tutor to draw on -- no file upload, just paste text. Gets embedded into knowledge_chunks immediately."
+          }
+        }
+      ]
+    }
+  ]
+}
