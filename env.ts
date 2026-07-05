@@ -1,3 +1,4 @@
+import dns from 'dns';
 import dotenv from 'dotenv';
 
 // Mirrors Next.js's env-loading convention, which the rest of this project
@@ -13,3 +14,10 @@ import dotenv from 'dotenv';
 // actually guarantees it runs before anything that reads `process.env`.
 dotenv.config({ path: '.env' });
 dotenv.config({ path: '.env.local', override: true });
+
+// Neon's DNS returns both A and AAAA records. Node tries IPv6 first by
+// default, and any environment whose IPv6 egress is broken or absent
+// (many containers/networks -- not just this one) burns the full connect
+// timeout on each unreachable AAAA address before falling back to IPv4,
+// which can make every DB connection attempt slow or fail outright.
+dns.setDefaultResultOrder('ipv4first');
