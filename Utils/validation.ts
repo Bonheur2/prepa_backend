@@ -83,9 +83,26 @@ export const createPastPaperSchema = z.object({
   file_url: z.string().url(),
 });
 
+// Multipart form fields arrive as strings (e.g. year: "2023"), unlike the
+// JSON path above -- z.coerce.number() converts before validating instead
+// of rejecting a numeric-looking string outright.
+export const createPastPaperUploadSchema = z.object({
+  subject_id: z.string().uuid(),
+  year: z.coerce.number().int().min(2000).max(2100),
+  term: z.string().max(50).optional(),
+});
+
 export const createDocumentSchema = z.object({
   title: z.string().min(1).max(255),
   content: z.string().min(1),
+  subject_id: z.string().uuid().optional(),
+  topic_id: z.string().uuid().optional(),
+});
+
+// content isn't collected here -- it comes from the uploaded PDF's
+// extracted text instead.
+export const createDocumentUploadSchema = z.object({
+  title: z.string().min(1).max(255),
   subject_id: z.string().uuid().optional(),
   topic_id: z.string().uuid().optional(),
 });

@@ -17,12 +17,13 @@ function chunkText(text: string, chunkSize = 800, overlap = 100): string[] {
 }
 
 export async function indexContent(
-  sourceType: 'topic' | 'question' | 'document',
+  sourceType: 'topic' | 'question' | 'document' | 'past_paper',
   sourceId: string,
   content: string,
   opts: { subjectId?: string | null; topicId?: string | null } = {}
 ): Promise<void> {
-  const chunks = sourceType === 'document' ? chunkText(content) : [content];
+  const chunks =
+    sourceType === 'document' || sourceType === 'past_paper' ? chunkText(content) : [content];
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

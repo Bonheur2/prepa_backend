@@ -408,7 +408,38 @@
               "mode": "raw",
               "raw": "{\n  \"subject_id\": \"{{subjectId}}\",\n  \"year\": 2023,\n  \"term\": \"Term 1\",\n  \"file_url\": \"https://example.com/papers/biology-2023-term1.pdf\"\n}"
             },
-            "description": "file_url is an externally-hosted link -- there's no file upload endpoint yet (see README's 'Not yet built' section)."
+            "description": "For an externally-hosted PDF you already have a link for. To upload a real PDF file instead, use 'Create Past Paper (Upload PDF)' below."
+          }
+        },
+        {
+          "name": "Create Past Paper (Upload PDF)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('pastPaperId', pm.response.json().past_paper.id);",
+                  "  console.log('pastPaperId saved -- file stored in R2, text indexed into knowledge_chunks');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/past-papers/upload",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "subject_id", "value": "{{subjectId}}", "type": "text" },
+                { "key": "year", "value": "2023", "type": "text" },
+                { "key": "term", "value": "Term 1", "type": "text" },
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "description": "Uploads a real PDF: stored permanently in Cloudflare R2 (file_url is set automatically), and its extracted text is indexed into the RAG knowledge base so the AI tutor can reference it. Select a PDF for the 'file' field before sending -- Postman can't pre-fill a file picker from a saved collection."
           }
         }
       ]
@@ -601,7 +632,38 @@
               "mode": "raw",
               "raw": "{\n  \"title\": \"Photosynthesis notes\",\n  \"content\": \"Photosynthesis is the process by which plants convert light energy into chemical energy, producing glucose and oxygen from carbon dioxide and water.\",\n  \"subject_id\": \"{{subjectId}}\",\n  \"topic_id\": \"{{topicId}}\"\n}"
             },
-            "description": "Plain-text study material for the AI tutor to draw on -- no file upload, just paste text. Gets embedded into knowledge_chunks immediately."
+            "description": "For plain-text study material you paste in directly. To upload a PDF instead, use 'Create Document (Upload PDF)' below."
+          }
+        },
+        {
+          "name": "Create Document (Upload PDF)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('documentId', pm.response.json().document.id);",
+                  "  console.log('documentId saved -- PDF text extracted and indexed into knowledge_chunks');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{teacherToken}}" }] },
+            "url": "{{baseUrl}}/knowledge/documents/upload",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Photosynthesis notes (PDF)", "type": "text" },
+                { "key": "subject_id", "value": "{{subjectId}}", "type": "text" },
+                { "key": "topic_id", "value": "{{topicId}}", "type": "text" },
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "description": "Uploads a PDF; its text is extracted automatically (not stored as a file -- only the extracted text is kept, same as the pasted-text flow) and indexed into knowledge_chunks. Select a PDF for the 'file' field before sending."
           }
         }
       ]

@@ -10,13 +10,16 @@
     "postinstall": "node scripts/fix-sharp-stub.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1079.0",
     "@xenova/transformers": "^2.17.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.2.0",
     "openai": "^4.52.0",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.12.0",
     "pgvector": "^0.3.0",
     "zod": "^3.23.8"
@@ -26,7 +29,9 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.6",
+    "@types/multer": "^2.2.0",
     "@types/node": "^20.14.0",
+    "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.11.6",
     "tsx": "^4.23.0",
     "typescript": "^5.5.3"
